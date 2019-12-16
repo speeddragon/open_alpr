@@ -6,13 +6,6 @@ defmodule OpenALPR do
   """
 
   @doc """
-  Process image given image file path.
-  """
-  def recognize(_image_file_path) do
-    {:error, :not_implemented}
-  end
-
-  @doc """
   Process image given image URL.
 
   ## Parameters
@@ -35,14 +28,7 @@ defmodule OpenALPR do
     |> case do
       {:ok, %HTTPoison.Response{body: body}} ->
         # Improve structure assign
-        response = Jason.decode!(body, keys: :atoms)
-        object = struct(OpenALPR.Response, response)
-
-        if object.error === false do
-          {:ok, object}
-        else
-          {:error, object.error}
-        end
+        handle_response(body)
 
       {:error, response} ->
         # Improve error handling
@@ -51,10 +37,42 @@ defmodule OpenALPR do
   end
 
   @doc """
-  Process image given image base64 string
+  Process image given image file path.
   """
-  def recognize_bytes(_image_base64) do
-    {:error, :not_implemented}
+
+  def recognize(file_path) do
+    form =
+      {:multipart,
+       [
+         {"secret_key", get_secret_key!()},
+         {"country", "eu"},
+         {"state", "pt"},
+         {:file, file_path,
+          {"form-data", [{:name, "image"}, {:filename, Path.basename(file_path)}]}, []}
+       ]}
+
+    "#{get_base_url!()}/recognize"
+    |> HTTPoison.post(form, [])
+    |> case do
+      {:ok, %HTTPoison.Response{body: body}} ->
+        # Improve structure assign
+        handle_response(body)
+
+      {:error, response} ->
+        # Improve error handling
+        {:error, response}
+    end
+  end
+
+  defp handle_response(body) do
+    response = Jason.decode!(body, keys: :atoms)
+    object = struct(OpenALPR.Response, response)
+
+    if object.error === false do
+      {:ok, object}
+    else
+      {:error, object.error}
+    end
   end
 
   def config() do
