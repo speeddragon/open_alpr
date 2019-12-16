@@ -19,7 +19,7 @@ defmodule OpenALPR.MixProject do
       """,
 
       # Docs
-      name: "Puppeteer PDF",
+      name: "Open ALPR",
       source_url: "https://github.com/speeddragon/open_alpr",
       docs: [main: "readme", extras: ["README.md"]]
     ]
